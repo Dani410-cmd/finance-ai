@@ -8,6 +8,10 @@ from ml.insights_engine import generate_insights_and_recommendations
 
 app = FastAPI(title="Personal Finance AI Backend")
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "Personal Finance AI Backend"}
+
 class Transaction(BaseModel):
     date: date
     ref: str
@@ -55,4 +59,4 @@ def get_insights(req: InsightsRequest):
         current_balance=req.current_balance,
         avg_daily_expense=req.avg_daily_expense,
     )
-    return resultы
+    return result
