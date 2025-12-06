@@ -1,0 +1,7 @@
+cat docker-compose.yml
+services:
+  backend:
+    build: .
+    container_name: finance-backend
+    ports:
+      - "80:8000"   # снаружи 80, внутри 8000
