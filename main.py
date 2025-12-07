@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional
+import os
 from datetime import date
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,15 +12,18 @@ from ml.smart_predict_v3 import smart_predict_transaction
 
 app = FastAPI(title="Personal Finance AI Backend")
 
-origins = [
+default_origins = [
     "http://localhost:3000",
+    "http://localhost:5173",
     "https://financeai.app",
 ]
 
+frontend_origins = [origin for origin in os.getenv("FRONTEND_ORIGINS", "").split(",") if origin]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.csb\.app",
+    allow_origins=[*default_origins, *frontend_origins],
+    allow_origin_regex=r"https?://localhost(:\d+)?|https://.*\.csb\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,11 +42,25 @@ class Transaction(BaseModel):
     deposit: float = 0.0
     category: Optional[str] = None
 
+    @field_validator("withdraw", "deposit")
+    @classmethod
+    def validate_amount(cls, value: float, info: ValidationInfo):
+        if value < 0:
+            raise ValueError(f"{info.field_name} must be non-negative")
+        return value
+
 
 class ClassifyRequest(BaseModel):
     ref: str
     withdraw: float = 0.0
     deposit: float = 0.0
+
+    @field_validator("withdraw", "deposit")
+    @classmethod
+    def validate_amount(cls, value: float, info: ValidationInfo):
+        if value < 0:
+            raise ValueError(f"{info.field_name} must be non-negative")
+        return value
 
 
 class ClassifyResponse(BaseModel):
@@ -60,7 +78,7 @@ class InsightsRequest(BaseModel):
     current_balance: float
     avg_daily_expense: float
 
-    @field_validator("monthly_budget", "avg_daily_expense")
+    @field_validator("monthly_budget", "avg_daily_expense", "current_balance")
     @classmethod
     def validate_non_negative(cls, value: float, info: ValidationInfo):
         if value < 0:
@@ -95,9 +113,6 @@ class ForecastItem(BaseModel):
     day: int
     balance: float
 
-
-class ForecastResponse(BaseModel):
-    forecast: List[ForecastItem]
 
 class ForecastRequest(BaseModel):
     days: int = 7
@@ -135,12 +150,11 @@ def get_insights(req: InsightsRequest):
     return InsightsResponse(**result)
 
 
-@app.post("/forecast", response_model=ForecastResponse)
+@app.post("/forecast", response_model=List[ForecastItem])
 def forecast_balance(req: ForecastRequest):
     try:
         forecast_data = generate_forecast(req.days)
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="forecast model not found")
 
-    forecast = [ForecastItem(**item) for item in forecast_data]
-    return ForecastResponse(forecast=forecast)
+    return [ForecastItem(**item) for item in forecast_data]

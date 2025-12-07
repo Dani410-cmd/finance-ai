@@ -1,0 +1,6 @@
+[
+  {"date": "2024-12-01", "ref": "Groceries", "withdraw": 3200.5, "deposit": 0},
+  {"date": "2024-12-02", "ref": "Salary", "withdraw": 0, "deposit": 95000},
+  {"date": "2024-12-03", "ref": "Taxi ride", "withdraw": 850, "deposit": 0},
+  {"date": "2024-12-04", "ref": "Utilities", "withdraw": 4100, "deposit": 0}
+]

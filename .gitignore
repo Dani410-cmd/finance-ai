@@ -1,4 +1,21 @@
-__pycache__
-.idea
-backend_models
-venv
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE/editor files
+.idea/
+.vscode/
+.DS_Store
+
+# Data and models (large or local)
+data/raw/
+backend_models/*.tmp
+
+# Local service files
+*.log
