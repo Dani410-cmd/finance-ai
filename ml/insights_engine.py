@@ -26,7 +26,7 @@ def generate_insights_and_recommendations(
     for tx in transactions:
         withdraw = tx.get("withdraw", 0) or 0
         deposit = tx.get("deposit", 0) or 0
-        category = tx.get("category", "other")
+        category = tx.get("category") or "other"
 
         amount = deposit - withdraw
 

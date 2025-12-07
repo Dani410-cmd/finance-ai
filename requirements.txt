@@ -8,3 +8,5 @@ joblib
 scipy
 statsmodels
 python-multipart
+httpx
+pytest

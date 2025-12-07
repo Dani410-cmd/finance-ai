@@ -61,17 +61,14 @@ ML + FastAPI Backend + Insights Engine
 
 ## 🔧 Как запустить и протестировать Backend
 
-### 1) Подготовить окружение
+### Вариант 1. Локально (виртуальное окружение)
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
 
-### 2) Запустить сервер
-
-```bash
+# Запуск dev-сервера
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -80,6 +77,27 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 curl http://localhost:8000/health
 ```
+
+
+### Вариант 2. Docker/Docker Compose
+
+```bash
+docker compose up --build -d
+# или вручную
+docker build -t finance-ai .
+docker run --rm -p 8000:8000 finance-ai
+```
+
+API поднимется на `http://localhost:8000`. В репозитории есть unit-файл `finance-ai.service` для systemd, если нужно
+держать compose-сервис в проде.
+
+### Подключение фронтенда
+
+- CORS открыт для `http://localhost:3000` и `https://*.csb.app` (CodeSandbox). Другие origin при необходимости добавьте в
+  `main.py`.
+- Базовый URL API: `http://<host>:8000` (эндпоинты `/health`, `/classify`, `/insights`, `/forecast`).
+- Для CodeSandbox укажите этот URL в фронтенд-конфигурации (например, `.env` вида `VITE_API_URL=https://your-host:8000`).
+
 
 ### 3) Пример запросов к API
 
