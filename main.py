@@ -15,14 +15,22 @@ from ml.insights_engine import generate_insights_and_recommendations
 app = FastAPI(title="Personal Finance AI Backend")
 
 # === CORS, чтобы фронтенд мог ходить на API ===
-# Можешь заменить "*" на конкретные origin'ы (например, "https://z8j7l9.csb.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # или ["https://z8j7l9.csb.app"]
+    allow_origins=[
+        "http://127.0.0.1:3000",
+        "https://z8j7l9.csb.app",
+        "https://*.csb.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 # === Модель для прогноза баланса ===
 
