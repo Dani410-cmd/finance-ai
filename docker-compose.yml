@@ -1,14 +1,10 @@
-version: "3.9"
-
 services:
   backend:
     build: .
     container_name: finance-backend
-    ports:
-      - "80:8000"        # Снаружи 80 (HTTP), внутри 8000 (uvicorn)
-    env_file:
-      - .env             # опционально, для FRONTEND_ORIGINS и прочих
     restart: unless-stopped
+    ports:
+      - "8000:8000"        # снаружи 8000, внутри 8000 (uvicorn)
     volumes:
       - ./backend_models:/app/backend_models:ro
       - ./data:/app/data:ro
