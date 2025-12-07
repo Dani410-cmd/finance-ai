@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
+from fastapi.middleware.cors import CORSMiddleware
 
 from ml.smart_predict_v3 import smart_predict_transaction
 from ml.insights_engine import generate_insights_and_recommendations
