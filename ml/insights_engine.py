@@ -1,7 +1,6 @@
 # ml/insights_engine.py
 
 from typing import List, Dict
-from datetime import datetime
 
 def generate_insights_and_recommendations(
     transactions: List[Dict],
@@ -42,25 +41,33 @@ def generate_insights_and_recommendations(
     # ----------------------------------------
     budget_left = monthly_budget - total_expense
 
-    if budget_left >= monthly_budget * 0.3:
-        budget_status = "ok"        # всё хорошо
-    elif budget_left >= 0:
-        budget_status = "warning"   # скоро закончится
+    if monthly_budget > 0:
+        budget_used_percent = round((total_expense / monthly_budget) * 100, 2)
     else:
-        budget_status = "danger"    # превышение бюджета
+        budget_used_percent = 0.0
+    
+    if budget_left < 0:
+        budget_status = "danger"  # превышение бюджета
+    elif budget_used_percent >= 90:
+        budget_status = "warning"  # бюджет почти исчерпан
+    elif budget_used_percent >= 70:
+        budget_status = "watch"  # требуется внимательность
+    else:
+        budget_status = "ok"  # всё хорошо
 
     # ----------------------------------------
     # 3. ФИНАНСОВАЯ ПОДУШКА
     # ----------------------------------------
     recommended_cushion = avg_daily_expense * 30  # рекомендуем минимум 1 месяц
-    if recommended_cushion <= 0:
-        recommended_cushion = 1  # защита от деления на ноль
 
-    cushion_percent = min(100, round(current_balance / recommended_cushion * 100))
+    if recommended_cushion > 0:
+        safety_pillow_percent = round((current_balance / recommended_cushion) * 100, 2)
+    else:
+        safety_pillow_percent = 100.0  # если расходов нет — подушка покрыта
 
-    if cushion_percent >= 70:
+    if safety_pillow_percent >= 100:
         cushion_status = "good"
-    elif cushion_percent >= 40:
+    elif safety_pillow_percent >= 60:
         cushion_status = "medium"
     else:
         cushion_status = "low"
@@ -75,7 +82,7 @@ def generate_insights_and_recommendations(
         recommendations.append(
             "Ваши расходы превышают бюджет — сократите необязательные траты."
         )
-    elif budget_status == "warning":
+    elif budget_status in ("warning", "watch"):
         recommendations.append(
             "Вы приближаетесь к лимиту бюджета. Контролируйте расходы."
         )
@@ -89,13 +96,24 @@ def generate_insights_and_recommendations(
         recommendations.append(
             "Финансовая подушка на среднем уровне — продолжайте откладывать."
         )
-
-    # Топовые траты
-    if category_totals:
-        top_cat = max(category_totals.items(), key=lambda x: x[1])
+    else:
         recommendations.append(
-            f"Больше всего расходов в этом месяце — категория '{top_cat[0]}'."
+            "Продолжайте придерживаться текущего темпа накоплений — подушка сформирована."
         )
+    # Топовые траты
+    top_categories = []
+    if category_totals and total_expense > 0:
+        sorted_cats = sorted(category_totals.items(), key=lambda x: x[1], reverse=True)
+        for category, amount in sorted_cats[:5]:
+            share = round((amount / total_expense) * 100, 2)
+            top_categories.append(
+                {"category": category, "amount": round(amount, 2), "share": share}
+            )
+        recommendations.append(
+            f"Больше всего расходов в этом месяце — категория '{top_categories[0]['category']}'."
+        )
+    else:
+        top_categories = []
 
     # ----------------------------------------
     # 5. ИТОГОВЫЙ JSON ДЛЯ BACKEND → FRONTEND
@@ -105,11 +123,15 @@ def generate_insights_and_recommendations(
         "monthly_budget": round(monthly_budget, 2),
         "budget_left": round(budget_left, 2),
         "budget_status": budget_status,
+        "budget_used_percent": budget_used_percent,
 
+        "current_balance": round(current_balance, 2),
+        "avg_daily_expense": round(avg_daily_expense, 2),
         "recommended_cushion": round(recommended_cushion, 2),
-        "cushion_percent": cushion_percent,
-        "cushion_status": cushion_status,
+        "safety_pillow_percent": safety_pillow_percent,
+        "safety_pillow_status": cushion_status,
 
-        "categories": category_totals,
+        "categories": {k: round(v, 2) for k, v in category_totals.items()},
+        "top_categories": top_categories,
         "recommendations": recommendations,
     }

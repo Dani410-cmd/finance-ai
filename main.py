@@ -46,15 +46,25 @@ class InsightsRequest(BaseModel):
     avg_daily_expense: float
 
 
+class TopCategory(BaseModel):
+    category: str
+    amount: float
+    share: float
+
+
 class InsightsResponse(BaseModel):
     monthly_expense: float
     monthly_budget: float
     budget_left: float
     budget_status: str
+    budget_used_percent: float
+    current_balance: float
+    avg_daily_expense: float
     recommended_cushion: float
-    cushion_percent: int
-    cushion_status: str
+    safety_pillow_percent: float
+    safety_pillow_status: str
     categories: Dict[str, float]
+    top_categories: List[TopCategory]
     recommendations: List[str]
 
 
